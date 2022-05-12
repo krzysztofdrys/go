@@ -9,10 +9,6 @@ import (
 func FuzzJsonIter(f *testing.F) {
 	var json = ConfigCompatibleWithStandardLibrary
 
-	f.Add(`{"a":1,"b":2,"c":3}`)
-	f.Add(`{"a":[1,2,3]}`)
-	f.Add(`{"a":{"b":{"c":1}}}`)
-
 	f.Fuzz(func(t *testing.T, s string) {
 		bb := []byte(s)
 		if !utf8.ValidString(s) {
@@ -21,12 +17,16 @@ func FuzzJsonIter(f *testing.F) {
 		if !stdjson.Valid(bb) {
 			t.Skip("invalid json")
 		}
+		v := map[string]interface{}{}
+		if err := stdjson.Unmarshal(bb, &v); err != nil {
+			t.Skip("invalid json")
+		}
 
 		v2 := map[string]interface{}{}
 		if err := json.Unmarshal(bb, &v2); err != nil {
 			t.Fatalf("Failed to unmarshal: %s", err)
 		}
-		if len(v2) >= 3 {
+		if len(v2) >= 5 {
 			panic("did it!")
 		}
 	})
